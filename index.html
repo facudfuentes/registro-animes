@@ -80,4 +80,414 @@
                 <input type="hidden" id="anime-id">
                 <div class="sm:col-span-7">
                     <label class="block text-xs font-medium text-slate-400 mb-1">Nombre del Anime</label>
-                    <input type="
+                    <input type="text" id="anime-name" required placeholder="Ej. Shingeki no Kyojin" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                </div>
+                <div class="sm:col-span-3">
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Puntaje</label>
+                    <select id="anime-score" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                        <option value="Malo">Malo</option>
+                        <option value="Bueno">Bueno</option>
+                        <option value="Muy bueno">Muy bueno</option>
+                        <option value="Excelente">Excelente</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-2 flex items-end">
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-md">
+                        <i data-lucide="save" class="w-4 h-4"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Filtros, Buscador y Orden -->
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="relative w-full sm:w-64">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3.5 top-3"></i>
+                    <input type="text" id="search-input" oninput="renderAnimes()" placeholder="Buscar anime..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                </div>
+                <button onclick="toggleSortOrder()" id="sort-btn" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5 whitespace-nowrap">
+                    <i data-lucide="arrow-up-down" class="w-4 h-4 text-indigo-400"></i> <span id="sort-label">Alfabético</span>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
+                <button onclick="filterByScore('Todos')" id="filter-Todos" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition whitespace-nowrap">Todos</button>
+                <button onclick="filterByScore('Excelente')" id="filter-Excelente" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition whitespace-nowrap">Excelente</button>
+                <button onclick="filterByScore('Muy bueno')" id="filter-Muy bueno" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition whitespace-nowrap">Muy bueno</button>
+                <button onclick="filterByScore('Bueno')" id="filter-Bueno" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition whitespace-nowrap">Bueno</button>
+                <button onclick="filterByScore('Malo')" id="filter-Malo" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition whitespace-nowrap">Malo</button>
+            </div>
+        </div>
+
+        <!-- Listado -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center text-xs text-slate-400 font-medium">
+                <span>ANIME</span>
+                <span>PUNTAJE / ACCIONES</span>
+            </div>
+            <div id="animes-list" class="divide-y divide-slate-800/60">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Login Admin -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <h3 class="text-base font-semibold mb-3 flex items-center gap-2">
+                <i data-lucide="shield-check" class="w-5 h-5 text-indigo-400"></i> Autenticación de Administrador
+            </h3>
+            <p class="text-xs text-slate-400 mb-4">Ingresa la clave para habilitar la edición de registros.</p>
+            <input type="password" id="admin-password-input" onkeydown="if(event.key==='Enter') verifyAdmin()" placeholder="Contraseña" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 mb-4 text-slate-100">
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="toggleAuthModal()" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white">Cancelar</button>
+                <button type="button" onclick="verifyAdmin()" class="px-4 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition">Ingresar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cambio de Contraseña -->
+    <div id="pwd-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <h3 class="text-base font-semibold mb-3 flex items-center gap-2">
+                <i data-lucide="key-round" class="w-5 h-5 text-indigo-400"></i> Cambiar Contraseña Admin
+            </h3>
+            <div class="space-y-3 mb-4">
+                <input type="password" id="current-pwd" placeholder="Contraseña actual" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                <input type="password" id="new-pwd" placeholder="Nueva contraseña" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                <input type="password" id="confirm-pwd" placeholder="Confirmar nueva contraseña" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closePasswordModal()" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white">Cancelar</button>
+                <button type="button" onclick="updatePassword()" class="px-4 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación Flotante -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 border border-slate-700 text-slate-100 px-4 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
+        <i id="toast-icon" data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
+        <span id="toast-msg" class="text-sm font-medium">Notificación</span>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN DE SUPABASE
+        const SUPABASE_URL = 'https://hflhrzzafzoirobxgkhw.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmbGhyenphZnpvaXJvYnhna2h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MTI4MzgsImV4cCI6MjEwNzM4ODgzOH0.ze2qlBJBMfxYm_Xf4BwhkNCrQLI8ovGK_bHXK35nYvg'; // Coloca tu clave real respetando las comillas simples
+        
+        let db = null;
+        try {
+            if (window.supabase) {
+                db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch(err) {
+            console.error("Error al conectar Supabase:", err);
+        }
+
+        let animes = [];
+        let isAdmin = localStorage.getItem('is_admin') === 'true';
+        let currentFilter = 'Todos';
+        let currentSort = 'alpha';
+        let adminPassword = localStorage.getItem('admin_pwd') || 'admin123';
+
+        function init() {
+            try { if(window.lucide) lucide.createIcons(); } catch(e){}
+            if (isAdmin) {
+                applyAdminUI(true);
+            }
+            fetchAnimes();
+        }
+
+        async function fetchAnimes() {
+            if (!db) return;
+            try {
+                const { data, error } = await db.from('animes').select('*');
+                if (error) {
+                    console.error("Error al obtener animes:", error);
+                    showToast('Error al cargar datos de la nube', 'alert-circle', 'text-rose-400');
+                    return;
+                }
+                animes = data || [];
+                updateStats();
+                renderAnimes();
+            } catch (err) {
+                console.error("Excepción en fetchAnimes:", err);
+            }
+        }
+
+        function updateStats() {
+            const total = animes.length;
+            const excelente = animes.filter(a => a.puntaje === 'Excelente').length;
+            const muyBueno = animes.filter(a => a.puntaje === 'Muy bueno').length;
+            const bueno = animes.filter(a => a.puntaje === 'Bueno').length;
+            const malo = animes.filter(a => a.puntaje === 'Malo').length;
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-excelente').textContent = excelente;
+            document.getElementById('stat-muy-bueno').textContent = muyBueno;
+            document.getElementById('stat-bueno').textContent = bueno;
+            document.getElementById('stat-malo').textContent = malo;
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            if (!db) return;
+            const id = document.getElementById('anime-id').value;
+            const nombre = document.getElementById('anime-name').value.trim();
+            const puntaje = document.getElementById('anime-score').value;
+
+            try {
+                if (id) {
+                    const { error } = await db
+                        .from('animes')
+                        .update({ nombre, puntaje })
+                        .eq('id', id);
+
+                    if (error) {
+                        console.error("Error al actualizar:", error);
+                        showToast('Error al actualizar', 'alert-circle', 'text-rose-400');
+                        return;
+                    }
+                    showToast('Anime actualizado correctamente');
+                } else {
+                    const { error } = await db
+                        .from('animes')
+                        .insert({ nombre, puntaje })
+                        .select();
+
+                    if (error) {
+                        console.error("Error al insertar:", error);
+                        showToast('Error al agregar', 'alert-circle', 'text-rose-400');
+                        return;
+                    }
+                    showToast('Anime agregado correctamente');
+                }
+
+                resetForm();
+                await fetchAnimes();
+            } catch (err) {
+                console.error("Error en envío de formulario:", err);
+            }
+        }
+
+        async function deleteAnime(id) {
+            if (!db) return;
+            if (!confirm('¿Estás seguro de eliminar este anime?')) return;
+            try {
+                const { error } = await db.from('animes').delete().eq('id', id);
+                if (error) { showToast('Error al eliminar', 'alert-circle', 'text-rose-400'); return; }
+                showToast('Anime eliminado');
+                await fetchAnimes();
+            } catch (err) {
+                console.error("Error al borrar:", err);
+            }
+        }
+
+        function editAnime(id) {
+            const anime = animes.find(a => String(a.id) === String(id));
+            if (!anime) return;
+            document.getElementById('anime-id').value = anime.id;
+            document.getElementById('anime-name').value = anime.nombre;
+            document.getElementById('anime-score').value = anime.puntaje;
+            document.getElementById('form-title').innerHTML = `<i data-lucide="edit-3" class="w-5 h-5 text-indigo-400"></i> Editar Anime`;
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            try { if(window.lucide) lucide.createIcons(); } catch(e){}
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById('anime-form').reset();
+            document.getElementById('anime-id').value = '';
+            document.getElementById('form-title').innerHTML = `<i data-lucide="plus-circle" class="w-5 h-5 text-indigo-400"></i> Agregar Nuevo Anime`;
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+            try { if(window.lucide) lucide.createIcons(); } catch(e){}
+        }
+
+        function toggleSortOrder() {
+            currentSort = currentSort === 'alpha' ? 'created' : 'alpha';
+            document.getElementById('sort-label').textContent = currentSort === 'alpha' ? 'Alfabético' : 'Orden de Carga';
+            renderAnimes();
+        }
+
+        function renderAnimes() {
+            const listContainer = document.getElementById('animes-list');
+            const searchInput = document.getElementById('search-input');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
+
+            let filtered = animes.filter(a => {
+                const matchesSearch = (a.nombre || '').toLowerCase().includes(search);
+                const matchesFilter = currentFilter === 'Todos' || a.puntaje === currentFilter;
+                return matchesSearch && matchesFilter;
+            });
+
+            filtered.sort((a, b) => {
+                if (currentSort === 'alpha') {
+                    return (a.nombre || '').localeCompare(b.nombre || '');
+                } else {
+                    if (a.created_at && b.created_at) {
+                        return new Date(a.created_at) - new Date(b.created_at);
+                    }
+                    return String(a.id || '').localeCompare(String(b.id || ''));
+                }
+            });
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="p-8 text-center text-slate-500 text-sm">
+                        No se encontraron animes registrados.
+                    </div>
+                `;
+                return;
+            }
+
+            const scoreColors = {
+                'Excelente': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+                'Muy bueno': 'bg-sky-500/10 text-sky-400 border-sky-500/20',
+                'Bueno': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+                'Malo': 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+            };
+
+            listContainer.innerHTML = filtered.map(a => `
+                <div class="p-4 flex items-center justify-between hover:bg-slate-900/50 transition">
+                    <span class="font-medium text-sm text-slate-200">${escapeHtml(a.nombre || '')}</span>
+                    <div class="flex items-center gap-3">
+                        <span class="px-2.5 py-1 text-xs font-semibold rounded-lg border ${scoreColors[a.puntaje] || 'bg-slate-800 text-slate-300'}">
+                            ${a.puntaje}
+                        </span>
+                        ${isAdmin ? `
+                            <div class="flex items-center gap-1 border-l border-slate-800 pl-3">
+                                <button onclick="editAnime('${a.id}')" class="p-1.5 text-slate-400 hover:text-indigo-400 transition" title="Editar">
+                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteAnime('${a.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 transition" title="Eliminar">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+            try { if(window.lucide) lucide.createIcons(); } catch(e){}
+        }
+
+        function filterByScore(score) {
+            currentFilter = score;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.className = "filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition whitespace-nowrap";
+            });
+            const activeBtn = document.getElementById(`filter-${score}`);
+            if (activeBtn) {
+                activeBtn.className = "filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition whitespace-nowrap";
+            }
+            renderAnimes();
+        }
+
+        function toggleAuthModal() {
+            if (isAdmin) {
+                isAdmin = false;
+                localStorage.removeItem('is_admin');
+                applyAdminUI(false);
+                showToast('Sesión de administrador cerrada');
+                renderAnimes();
+                return;
+            }
+            const modal = document.getElementById('auth-modal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                document.getElementById('admin-password-input').value = '';
+                document.getElementById('admin-password-input').focus();
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function verifyAdmin() {
+            const pwd = document.getElementById('admin-password-input').value;
+            if (pwd === adminPassword) {
+                isAdmin = true;
+                localStorage.setItem('is_admin', 'true');
+                document.getElementById('auth-modal').classList.add('hidden');
+                applyAdminUI(true);
+                showToast('Acceso de administrador concedido');
+                renderAnimes();
+            } else {
+                showToast('Contraseña incorrecta', 'alert-circle', 'text-rose-400');
+            }
+        }
+
+        function applyAdminUI(active) {
+            if (active) {
+                document.getElementById('admin-panel').classList.remove('hidden');
+                document.getElementById('change-pwd-btn').classList.remove('hidden');
+                document.getElementById('auth-btn').innerHTML = `<i data-lucide="unlock" class="w-4 h-4"></i> Salir Admin`;
+                document.getElementById('role-badge').className = "px-3 py-1 text-xs font-semibold rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20";
+                document.getElementById('role-badge').textContent = "Modo Administrador";
+            } else {
+                document.getElementById('admin-panel').classList.add('hidden');
+                document.getElementById('change-pwd-btn').classList.add('hidden');
+                document.getElementById('auth-btn').innerHTML = `<i data-lucide="lock" class="w-4 h-4"></i> Acceso Admin`;
+                document.getElementById('role-badge').className = "px-3 py-1 text-xs font-semibold rounded-full bg-slate-800 text-slate-300 border border-slate-700";
+                document.getElementById('role-badge').textContent = "Modo Espectador";
+                resetForm();
+            }
+            try { if(window.lucide) lucide.createIcons(); } catch(e){}
+        }
+
+        function openPasswordModal() {
+            document.getElementById('current-pwd').value = '';
+            document.getElementById('new-pwd').value = '';
+            document.getElementById('confirm-pwd').value = '';
+            document.getElementById('pwd-modal').classList.remove('hidden');
+        }
+
+        function closePasswordModal() {
+            document.getElementById('pwd-modal').classList.add('hidden');
+        }
+
+        function updatePassword() {
+            const current = document.getElementById('current-pwd').value;
+            const newPwd = document.getElementById('new-pwd').value;
+            const confirm = document.getElementById('confirm-pwd').value;
+
+            if (current !== adminPassword) {
+                showToast('La contraseña actual es incorrecta', 'alert-circle', 'text-rose-400');
+                return;
+            }
+            if (newPwd.length < 4) {
+                showToast('La nueva contraseña debe tener al menos 4 caracteres', 'alert-circle', 'text-rose-400');
+                return;
+            }
+            if (newPwd !== confirm) {
+                showToast('Las contraseñas nuevas no coinciden', 'alert-circle', 'text-rose-400');
+                return;
+            }
+
+            adminPassword = newPwd;
+            localStorage.setItem('admin_pwd', adminPassword);
+            closePasswordModal();
+            showToast('Contraseña actualizada correctamente');
+        }
+
+        function showToast(msg, icon = 'check-circle', iconColor = 'text-emerald-400') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            const toastIcon = document.getElementById('toast-icon');
+            toastIcon.setAttribute('data-lucide', icon);
+            toastIcon.className = `w-5 h-5 ${iconColor}`;
+            try { if(window.lucide) lucide.createIcons(); } catch(e){}
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
