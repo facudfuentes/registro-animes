@@ -75,3 +75,104 @@
                 </h2>
                 <button id="cancel-edit-btn" onclick="resetForm()" class="hidden text-xs text-slate-400 hover:text-white underline">Cancelar edición</button>
             </div>
+            
+            <form id="anime-form" onsubmit="handleFormSubmit(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-4">
+                <input type="hidden" id="anime-id">
+                <div class="sm:col-span-7">
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Nombre del Anime</label>
+                    <input type="text" id="anime-name" required placeholder="Ej. Shingeki no Kyojin" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                </div>
+                <div class="sm:col-span-3">
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Puntaje</label>
+                    <select id="anime-score" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                        <option value="Malo">Malo</option>
+                        <option value="Bueno">Bueno</option>
+                        <option value="Muy bueno">Muy bueno</option>
+                        <option value="Excelente">Excelente</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-2 flex items-end">
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-md">
+                        <i data-lucide="save" class="w-4 h-4"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Filtros, Buscador y Orden -->
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="relative w-full sm:w-64">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3.5 top-3"></i>
+                    <input type="text" id="search-input" oninput="renderAnimes()" placeholder="Buscar anime..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                </div>
+                <!-- Botón de Ordenamiento -->
+                <button onclick="toggleSortOrder()" id="sort-btn" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5 whitespace-nowrap" title="Cambiar ordenamiento">
+                    <i data-lucide="arrow-up-down" class="w-4 h-4 text-indigo-400"></i> <span id="sort-label">Alfabético</span>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
+                <button onclick="filterByScore('Todos')" id="filter-Todos" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition whitespace-nowrap">Todos</button>
+                <button onclick="filterByScore('Excelente')" id="filter-Excelente" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition whitespace-nowrap">Excelente</button>
+                <button onclick="filterByScore('Muy bueno')" id="filter-Muy bueno" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition whitespace-nowrap">Muy bueno</button>
+                <button onclick="filterByScore('Bueno')" id="filter-Bueno" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition whitespace-nowrap">Bueno</button>
+                <button onclick="filterByScore('Malo')" id="filter-Malo" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition whitespace-nowrap">Malo</button>
+            </div>
+        </div>
+
+        <!-- Listado -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center text-xs text-slate-400 font-medium">
+                <span>ANIME</span>
+                <span>PUNTAJE / ACCIONES</span>
+            </div>
+            <div id="animes-list" class="divide-y divide-slate-800/60">
+                <!-- Contenido dinámico -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Login Admin -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <h3 class="text-base font-semibold mb-3 flex items-center gap-2">
+                <i data-lucide="shield-check" class="w-5 h-5 text-indigo-400"></i> Autenticación de Administrador
+            </h3>
+            <p class="text-xs text-slate-400 mb-4">Ingresa la clave para habilitar la edición de registros.</p>
+            <input type="password" id="admin-password-input" onkeydown="if(event.key==='Enter') verifyAdmin()" placeholder="Contraseña" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 mb-4 text-slate-100">
+            <div class="flex justify-end gap-2">
+                <button onclick="toggleAuthModal()" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white">Cancelar</button>
+                <button onclick="verifyAdmin()" class="px-4 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition">Ingresar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cambio de Contraseña -->
+    <div id="pwd-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <h3 class="text-base font-semibold mb-3 flex items-center gap-2">
+                <i data-lucide="key-round" class="w-5 h-5 text-indigo-400"></i> Cambiar Contraseña Admin
+            </h3>
+            <div class="space-y-3 mb-4">
+                <input type="password" id="current-pwd" placeholder="Contraseña actual" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                <input type="password" id="new-pwd" placeholder="Nueva contraseña" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                <input type="password" id="confirm-pwd" placeholder="Confirmar nueva contraseña" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closePasswordModal()" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white">Cancelar</button>
+                <button onclick="updatePassword()" class="px-4 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación Flotante -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 border border-slate-700 text-slate-100 px-4 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
+        <i id="toast-icon" data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
+        <span id="toast-msg" class="text-sm font-medium">Notificación</span>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN DE SUPABASE
+        const SUPABASE_URL = 'https://hflhrzzafzoirobxgkhw.supabase.co';
+        const SUPABASE_ANON_
