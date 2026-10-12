@@ -169,7 +169,7 @@
             renderAnimes();
         }
 
-        async function handleFormSubmit(e) {
+   async function handleFormSubmit(e) {
     e.preventDefault();
     const id = document.getElementById('anime-id').value;
     const nombre = document.getElementById('anime-name').value.trim();
@@ -179,7 +179,7 @@
         // Actualizar registro existente
         const { error } = await db
             .from('animes')
-            .update({ nombre: nombre, puntaje: puntaje })
+            .update({ nombre, puntaje })
             .eq('id', id);
 
         if (error) {
@@ -189,10 +189,11 @@
         }
         showToast('Anime actualizado correctamente');
     } else {
-        // Insertar nuevo registro (enviando un objeto plano)
+        // Insertar nuevo registro usando .select() para evitar el error de cabecera de columnas
         const { error } = await db
             .from('animes')
-            .insert([{ nombre: nombre, puntaje: puntaje }]);
+            .insert({ nombre, puntaje })
+            .select();
 
         if (error) {
             console.error("Error al insertar:", error);
