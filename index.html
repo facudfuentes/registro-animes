@@ -170,26 +170,41 @@
         }
 
         async function handleFormSubmit(e) {
-            e.preventDefault();
-            const id = document.getElementById('anime-id').value;
-            const nombre = document.getElementById('anime-name').value.trim();
-            const puntaje = document.getElementById('anime-score').value;
+    e.preventDefault();
+    const id = document.getElementById('anime-id').value;
+    const nombre = document.getElementById('anime-name').value.trim();
+    const puntaje = document.getElementById('anime-score').value;
 
-            if (id) {
-                // Actualizar
-                const { error } = await db.from('animes').update({ nombre, puntaje }).eq('id', id);
-                if (error) { showToast('Error al actualizar', 'alert-circle', 'text-rose-400'); return; }
-                showToast('Anime actualizado correctamente');
-            } else {
-                // Insertar
-                const { error } = await db.from('animes').insert([{ nombre, puntaje }]);
-                if (error) { showToast('Error al agregar', 'alert-circle', 'text-rose-400'); return; }
-                showToast('Anime agregado correctamente');
-            }
+    if (id) {
+        // Actualizar registro existente
+        const { error } = await db
+            .from('animes')
+            .update({ nombre: nombre, puntaje: puntaje })
+            .eq('id', id);
 
-            resetForm();
-            await fetchAnimes();
+        if (error) {
+            console.error("Error al actualizar:", error);
+            showToast('Error al actualizar', 'alert-circle', 'text-rose-400');
+            return;
         }
+        showToast('Anime actualizado correctamente');
+    } else {
+        // Insertar nuevo registro (enviando un objeto plano)
+        const { error } = await db
+            .from('animes')
+            .insert([{ nombre: nombre, puntaje: puntaje }]);
+
+        if (error) {
+            console.error("Error al insertar:", error);
+            showToast('Error al agregar', 'alert-circle', 'text-rose-400');
+            return;
+        }
+        showToast('Anime agregado correctamente');
+    }
+
+    resetForm();
+    await fetchAnimes();
+}
 
         async function deleteAnime(id) {
             if (!confirm('¿Estás seguro de eliminar este anime?')) return;
