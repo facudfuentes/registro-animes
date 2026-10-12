@@ -43,6 +43,30 @@
     <!-- Main Content -->
     <main class="max-w-4xl mx-auto px-4 py-8 flex-1 w-full">
         
+        <!-- Panel de Estadísticas (Contadores) -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 flex flex-col">
+                <span class="text-xs text-slate-400 font-medium">Total</span>
+                <span id="stat-total" class="text-xl font-bold text-slate-100 mt-1">0</span>
+            </div>
+            <div class="bg-slate-900 border border-emerald-500/20 rounded-xl p-3.5 flex flex-col">
+                <span class="text-xs text-emerald-400 font-medium">Excelente</span>
+                <span id="stat-excelente" class="text-xl font-bold text-emerald-400 mt-1">0</span>
+            </div>
+            <div class="bg-slate-900 border border-sky-500/20 rounded-xl p-3.5 flex flex-col">
+                <span class="text-xs text-sky-400 font-medium">Muy bueno</span>
+                <span id="stat-muy-bueno" class="text-xl font-bold text-sky-400 mt-1">0</span>
+            </div>
+            <div class="bg-slate-900 border border-amber-500/20 rounded-xl p-3.5 flex flex-col">
+                <span class="text-xs text-amber-400 font-medium">Bueno</span>
+                <span id="stat-bueno" class="text-xl font-bold text-amber-400 mt-1">0</span>
+            </div>
+            <div class="bg-slate-900 border border-rose-500/20 rounded-xl p-3.5 flex flex-col col-span-2 sm:col-span-1">
+                <span class="text-xs text-rose-400 font-medium">Malo</span>
+                <span id="stat-malo" class="text-xl font-bold text-rose-400 mt-1">0</span>
+            </div>
+        </div>
+
         <!-- Admin Panel (Oculto por defecto) -->
         <div id="admin-panel" class="hidden mb-8 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
             <div class="flex justify-between items-center mb-4">
@@ -75,12 +99,19 @@
             </form>
         </div>
 
-        <!-- Filtros y Buscador -->
+        <!-- Filtros, Buscador y Orden -->
         <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-            <div class="relative w-full sm:w-72">
-                <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3.5 top-3"></i>
-                <input type="text" id="search-input" oninput="renderAnimes()" placeholder="Buscar anime..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="relative w-full sm:w-64">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3.5 top-3"></i>
+                    <input type="text" id="search-input" oninput="renderAnimes()" placeholder="Buscar anime..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                </div>
+                <!-- Botón para cambiar orden -->
+                <button onclick="toggleSortOrder()" id="sort-btn" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5 whitespace-nowrap" title="Cambiar orden">
+                    <i data-lucide="arrow-up-down" class="w-4 h-4 text-indigo-400"></i> <span id="sort-label">Alfabético</span>
+                </button>
             </div>
+
             <div class="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
                 <button onclick="filterByScore('Todos')" id="filter-Todos" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition whitespace-nowrap">Todos</button>
                 <button onclick="filterByScore('Excelente')" id="filter-Excelente" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition whitespace-nowrap">Excelente</button>
@@ -142,70 +173,88 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN DE SUPABASE (Reemplaza con tus datos reales)
+        // CONFIGURACIÓN DE SUPABASE
         const SUPABASE_URL = 'https://hflhrzzafzoirobxgkhw.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmbGhyenphZnpvaXJvYnhna2h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MTI4MzgsImV4cCI6MjEwNzM4ODgzOH0.ze2qlBJBMfxYm_Xf4BwhkNCrQLI8ovGK_bHXK35nYvg';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmbGhyenphZnpvaXJvYnhna3d3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMzg2NjYsImV4cCI6MjA1NjgxNDY2Nn0.2XQ... (tu clave anon)'; // Mantén tu clave actual
         
         const { createClient } = supabase;
         const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let animes = [];
-        let isAdmin = false;
+        let isAdmin = localStorage.getItem('is_admin') === 'true';
         let currentFilter = 'Todos';
+        let currentSort = 'alpha'; // 'alpha' o 'created'
         let adminPassword = localStorage.getItem('admin_pwd') || 'admin123';
 
         async function init() {
             lucide.createIcons();
+            if (isAdmin) {
+                applyAdminUI(true);
+            }
             await fetchAnimes();
         }
 
         async function fetchAnimes() {
-            const { data, error } = await db.from('animes').select('*').order('nombre', { ascending: true });
+            // Por defecto traemos ordenado por fecha de creación ascendente para mantener el orden de carga
+            const { data, error } = await db.from('animes').select('*').order('created_at', { ascending: true });
             if (error) {
                 showToast('Error al cargar datos de la nube', 'alert-circle', 'text-rose-400');
                 return;
             }
             animes = data || [];
+            updateStats();
             renderAnimes();
         }
 
-   async function handleFormSubmit(e) {
-    e.preventDefault();
-    const id = document.getElementById('anime-id').value;
-    const nombre = document.getElementById('anime-name').value.trim();
-    const puntaje = document.getElementById('anime-score').value;
+        function updateStats() {
+            const total = animes.length;
+            const excelente = animes.filter(a => a.puntaje === 'Excelente').length;
+            const muyBueno = animes.filter(a => a.puntaje === 'Muy bueno').length;
+            const bueno = animes.filter(a => a.puntaje === 'Bueno').length;
+            const malo = animes.filter(a => a.puntaje === 'Malo').length;
 
-    if (id) {
-        // Actualizar registro existente
-        const { error } = await db
-            .from('animes')
-            .update({ nombre, puntaje })
-            .eq('id', id);
-
-        if (error) {
-            console.error("Error al actualizar:", error);
-            showToast('Error al actualizar', 'alert-circle', 'text-rose-400');
-            return;
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-excelente').textContent = excelente;
+            document.getElementById('stat-muy-bueno').textContent = muyBueno;
+            document.getElementById('stat-bueno').textContent = bueno;
+            document.getElementById('stat-malo').textContent = malo;
         }
-        showToast('Anime actualizado correctamente');
-    } else {
-        // Insertar nuevo registro usando .select() para evitar el error de cabecera de columnas
-        const { error } = await db
-            .from('animes')
-            .insert({ nombre, puntaje })
-            .select();
 
-        if (error) {
-            console.error("Error al insertar:", error);
-            showToast('Error al agregar', 'alert-circle', 'text-rose-400');
-            return;
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('anime-id').value;
+            const nombre = document.getElementById('anime-name').value.trim();
+            const puntaje = document.getElementById('anime-score').value;
+
+            if (id) {
+                const { error } = await db
+                    .from('animes')
+                    .update({ nombre, puntaje })
+                    .eq('id', id);
+
+                if (error) {
+                    console.error("Error al actualizar:", error);
+                    showToast('Error al actualizar', 'alert-circle', 'text-rose-400');
+                    return;
+                }
+                showToast('Anime actualizado correctamente');
+            } else {
+                const { error } = await db
+                    .from('animes')
+                    .insert({ nombre, puntaje })
+                    .select();
+
+                if (error) {
+                    console.error("Error al insertar:", error);
+                    showToast('Error al agregar', 'alert-circle', 'text-rose-400');
+                    return;
+                }
+                showToast('Anime agregado correctamente');
+            }
+
+            resetForm();
+            await fetchAnimes();
         }
-        showToast('Anime agregado correctamente');
-    }
-
-    resetForm();
-    await fetchAnimes();
-}
 
         async function deleteAnime(id) {
             if (!confirm('¿Estás seguro de eliminar este anime?')) return;
@@ -235,14 +284,29 @@
             lucide.createIcons();
         }
 
+        function toggleSortOrder() {
+            currentSort = currentSort === 'alpha' ? 'created' : 'alpha';
+            document.getElementById('sort-label').textContent = currentSort === 'alpha' ? 'Alfabético' : 'Orden de Carga';
+            renderAnimes();
+        }
+
         function renderAnimes() {
             const listContainer = document.getElementById('animes-list');
             const search = document.getElementById('search-input').value.toLowerCase();
 
-            const filtered = animes.filter(a => {
+            let filtered = animes.filter(a => {
                 const matchesSearch = a.nombre.toLowerCase().includes(search);
                 const matchesFilter = currentFilter === 'Todos' || a.puntaje === currentFilter;
                 return matchesSearch && matchesFilter;
+            });
+
+            // Ordenar según selección
+            filtered.sort((a, b) => {
+                if (currentSort === 'alpha') {
+                    return a.nombre.localeCompare(b.nombre);
+                } else {
+                    return new Date(a.created_at) - new Date(b.created_at);
+                }
             });
 
             if (filtered.length === 0) {
@@ -295,15 +359,12 @@
 
         function toggleAuthModal() {
             if (isAdmin) {
+                // Cerrar sesión
                 isAdmin = false;
-                document.getElementById('admin-panel').classList.add('hidden');
-                document.getElementById('change-pwd-btn').classList.add('hidden');
-                document.getElementById('auth-btn').innerHTML = `<i data-lucide="lock" class="w-4 h-4"></i> Acceso Admin`;
-                document.getElementById('role-badge').className = "px-3 py-1 text-xs font-semibold rounded-full bg-slate-800 text-slate-300 border border-slate-700";
-                document.getElementById('role-badge').textContent = "Modo Espectador";
+                localStorage.removeItem('is_admin');
+                applyAdminUI(false);
                 showToast('Sesión de administrador cerrada');
                 renderAnimes();
-                lucide.createIcons();
                 return;
             }
             const modal = document.getElementById('auth-modal');
@@ -318,18 +379,32 @@
             const pwd = document.getElementById('admin-password-input').value;
             if (pwd === adminPassword) {
                 isAdmin = true;
-                toggleAuthModal();
+                localStorage.setItem('is_admin', 'true');
+                document.getElementById('auth-modal').classList.add('hidden'); // Cierra la modal de inmediato
+                applyAdminUI(true);
+                showToast('Acceso de administrador concedido');
+                renderAnimes();
+            } else {
+                showToast('Contraseña incorrecta', 'alert-circle', 'text-rose-400');
+            }
+        }
+
+        function applyAdminUI(active) {
+            if (active) {
                 document.getElementById('admin-panel').classList.remove('hidden');
                 document.getElementById('change-pwd-btn').classList.remove('hidden');
                 document.getElementById('auth-btn').innerHTML = `<i data-lucide="unlock" class="w-4 h-4"></i> Salir Admin`;
                 document.getElementById('role-badge').className = "px-3 py-1 text-xs font-semibold rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20";
                 document.getElementById('role-badge').textContent = "Modo Administrador";
-                showToast('Acceso de administrador concedido');
-                renderAnimes();
-                lucide.createIcons();
             } else {
-                showToast('Contraseña incorrecta', 'alert-circle', 'text-rose-400');
+                document.getElementById('admin-panel').classList.add('hidden');
+                document.getElementById('change-pwd-btn').classList.add('hidden');
+                document.getElementById('auth-btn').innerHTML = `<i data-lucide="lock" class="w-4 h-4"></i> Acceso Admin`;
+                document.getElementById('role-badge').className = "px-3 py-1 text-xs font-semibold rounded-full bg-slate-800 text-slate-300 border border-slate-700";
+                document.getElementById('role-badge').textContent = "Modo Espectador";
+                resetForm();
             }
+            lucide.createIcons();
         }
 
         function openPasswordModal() {
