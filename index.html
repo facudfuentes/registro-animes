@@ -106,7 +106,8 @@
                     <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3.5 top-3"></i>
                     <input type="text" id="search-input" oninput="renderAnimes()" placeholder="Buscar anime..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
                 </div>
-                <button onclick="toggleSortOrder()" id="sort-btn" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5 whitespace-nowrap">
+                <!-- Botón para cambiar orden -->
+                <button onclick="toggleSortOrder()" id="sort-btn" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5 whitespace-nowrap" title="Cambiar orden">
                     <i data-lucide="arrow-up-down" class="w-4 h-4 text-indigo-400"></i> <span id="sort-label">Alfabético</span>
                 </button>
             </div>
@@ -141,8 +142,8 @@
             <p class="text-xs text-slate-400 mb-4">Ingresa la clave para habilitar la edición de registros.</p>
             <input type="password" id="admin-password-input" onkeydown="if(event.key==='Enter') verifyAdmin()" placeholder="Contraseña" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 mb-4 text-slate-100">
             <div class="flex justify-end gap-2">
-                <button type="button" onclick="toggleAuthModal()" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white">Cancelar</button>
-                <button type="button" onclick="verifyAdmin()" class="px-4 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition">Ingresar</button>
+                <button onclick="toggleAuthModal()" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white">Cancelar</button>
+                <button onclick="verifyAdmin()" class="px-4 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition">Ingresar</button>
             </div>
         </div>
     </div>
@@ -159,8 +160,8 @@
                 <input type="password" id="confirm-pwd" placeholder="Confirmar nueva contraseña" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
             </div>
             <div class="flex justify-end gap-2">
-                <button type="button" onclick="closePasswordModal()" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white">Cancelar</button>
-                <button type="button" onclick="updatePassword()" class="px-4 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition">Guardar</button>
+                <button onclick="closePasswordModal()" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white">Cancelar</button>
+                <button onclick="updatePassword()" class="px-4 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition">Guardar</button>
             </div>
         </div>
     </div>
@@ -174,46 +175,35 @@
     <script>
         // CONFIGURACIÓN DE SUPABASE
         const SUPABASE_URL = 'https://hflhrzzafzoirobxgkhw.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmbGhyenphZnpvaXJvYnhna2h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MTI4MzgsImV4cCI6MjEwNzM4ODgzOH0.ze2qlBJBMfxYm_Xf4BwhkNCrQLI8ovGK_bHXK35nYvg'; // Coloca tu clave real respetando las comillas simples
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmbGhyenphZnpvaXJvYnhna2h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MTI4MzgsImV4cCI6MjEwNzM4ODgzOH0.ze2qlBJBMfxYm_Xf4BwhkNCrQLI8ovGK_bHXK35nYvg'; // Reemplaza con tu anon key real
         
-        let db = null;
-        try {
-            if (window.supabase) {
-                db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            }
-        } catch(err) {
-            console.error("Error al conectar Supabase:", err);
-        }
+        const { createClient } = supabase;
+        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let animes = [];
         let isAdmin = localStorage.getItem('is_admin') === 'true';
         let currentFilter = 'Todos';
-        let currentSort = 'alpha';
+        let currentSort = 'alpha'; // 'alpha' o 'created'
         let adminPassword = localStorage.getItem('admin_pwd') || 'admin123';
 
-        function init() {
-            try { if(window.lucide) lucide.createIcons(); } catch(e){}
+        async function init() {
+            lucide.createIcons();
             if (isAdmin) {
                 applyAdminUI(true);
             }
-            fetchAnimes();
+            await fetchAnimes();
         }
 
         async function fetchAnimes() {
-            if (!db) return;
-            try {
-                const { data, error } = await db.from('animes').select('*');
-                if (error) {
-                    console.error("Error al obtener animes:", error);
-                    showToast('Error al cargar datos de la nube', 'alert-circle', 'text-rose-400');
-                    return;
-                }
-                animes = data || [];
-                updateStats();
-                renderAnimes();
-            } catch (err) {
-                console.error("Excepción en fetchAnimes:", err);
+            const { data, error } = await db.from('animes').select('*').order('nombre', { ascending: true });
+            if (error) {
+                console.error("Error al obtener animes:", error);
+                showToast('Error al cargar datos de la nube', 'alert-circle', 'text-rose-400');
+                return;
             }
+            animes = data || [];
+            updateStats();
+            renderAnimes();
         }
 
         function updateStats() {
@@ -232,56 +222,50 @@
 
         async function handleFormSubmit(e) {
             e.preventDefault();
-            if (!db) return;
             const id = document.getElementById('anime-id').value;
             const nombre = document.getElementById('anime-name').value.trim();
             const puntaje = document.getElementById('anime-score').value;
 
-            try {
-                if (id) {
-                    const { error } = await db
-                        .from('animes')
-                        .update({ nombre, puntaje })
-                        .eq('id', id);
+            if (id) {
+                const { error } = await db
+                    .from('animes')
+                    .update({ nombre, puntaje })
+                    .eq('id', id);
 
-                    if (error) {
-                        console.error("Error al actualizar:", error);
-                        showToast('Error al actualizar', 'alert-circle', 'text-rose-400');
-                        return;
-                    }
-                    showToast('Anime actualizado correctamente');
-                } else {
-                    const { error } = await db
-                        .from('animes')
-                        .insert({ nombre, puntaje })
-                        .select();
-
-                    if (error) {
-                        console.error("Error al insertar:", error);
-                        showToast('Error al agregar', 'alert-circle', 'text-rose-400');
-                        return;
-                    }
-                    showToast('Anime agregado correctamente');
+                if (error) {
+                    console.error("Error al actualizar:", error);
+                    showToast('Error al actualizar', 'alert-circle', 'text-rose-400');
+                    return;
                 }
+                showToast('Anime actualizado correctamente');
+            } else {
+                // Inserción utilizando .select() para evitar errores 400 de API
+                const { error } = await db
+                    .from('animes')
+                    .insert({ nombre, puntaje })
+                    .select();
 
-                resetForm();
-                await fetchAnimes();
-            } catch (err) {
-                console.error("Error en envío de formulario:", err);
+                if (error) {
+                    console.error("Error al insertar:", error);
+                    showToast('Error al agregar', 'alert-circle', 'text-rose-400');
+                    return;
+                }
+                showToast('Anime agregado correctamente');
             }
+
+            resetForm();
+            await fetchAnimes();
         }
 
         async function deleteAnime(id) {
-            if (!db) return;
             if (!confirm('¿Estás seguro de eliminar este anime?')) return;
-            try {
-                const { error } = await db.from('animes').delete().eq('id', id);
-                if (error) { showToast('Error al eliminar', 'alert-circle', 'text-rose-400'); return; }
-                showToast('Anime eliminado');
-                await fetchAnimes();
-            } catch (err) {
-                console.error("Error al borrar:", err);
+            const { error } = await db.from('animes').delete().eq('id', id);
+            if (error) { 
+                showToast('Error al eliminar', 'alert-circle', 'text-rose-400'); 
+                return; 
             }
+            showToast('Anime eliminado');
+            await fetchAnimes();
         }
 
         function editAnime(id) {
@@ -292,7 +276,7 @@
             document.getElementById('anime-score').value = anime.puntaje;
             document.getElementById('form-title').innerHTML = `<i data-lucide="edit-3" class="w-5 h-5 text-indigo-400"></i> Editar Anime`;
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
-            try { if(window.lucide) lucide.createIcons(); } catch(e){}
+            lucide.createIcons();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -301,7 +285,7 @@
             document.getElementById('anime-id').value = '';
             document.getElementById('form-title').innerHTML = `<i data-lucide="plus-circle" class="w-5 h-5 text-indigo-400"></i> Agregar Nuevo Anime`;
             document.getElementById('cancel-edit-btn').classList.add('hidden');
-            try { if(window.lucide) lucide.createIcons(); } catch(e){}
+            lucide.createIcons();
         }
 
         function toggleSortOrder() {
@@ -312,23 +296,23 @@
 
         function renderAnimes() {
             const listContainer = document.getElementById('animes-list');
-            const searchInput = document.getElementById('search-input');
-            const search = searchInput ? searchInput.value.toLowerCase() : '';
+            const search = document.getElementById('search-input').value.toLowerCase();
 
             let filtered = animes.filter(a => {
-                const matchesSearch = (a.nombre || '').toLowerCase().includes(search);
+                const matchesSearch = a.nombre.toLowerCase().includes(search);
                 const matchesFilter = currentFilter === 'Todos' || a.puntaje === currentFilter;
                 return matchesSearch && matchesFilter;
             });
 
+            // Ordenamiento dinámico
             filtered.sort((a, b) => {
                 if (currentSort === 'alpha') {
-                    return (a.nombre || '').localeCompare(b.nombre || '');
+                    return a.nombre.localeCompare(b.nombre);
                 } else {
                     if (a.created_at && b.created_at) {
                         return new Date(a.created_at) - new Date(b.created_at);
                     }
-                    return String(a.id || '').localeCompare(String(b.id || ''));
+                    return String(a.id).localeCompare(String(b.id));
                 }
             });
 
@@ -350,7 +334,7 @@
 
             listContainer.innerHTML = filtered.map(a => `
                 <div class="p-4 flex items-center justify-between hover:bg-slate-900/50 transition">
-                    <span class="font-medium text-sm text-slate-200">${escapeHtml(a.nombre || '')}</span>
+                    <span class="font-medium text-sm text-slate-200">${escapeHtml(a.nombre)}</span>
                     <div class="flex items-center gap-3">
                         <span class="px-2.5 py-1 text-xs font-semibold rounded-lg border ${scoreColors[a.puntaje] || 'bg-slate-800 text-slate-300'}">
                             ${a.puntaje}
@@ -368,7 +352,7 @@
                     </div>
                 </div>
             `).join('');
-            try { if(window.lucide) lucide.createIcons(); } catch(e){}
+            lucide.createIcons();
         }
 
         function filterByScore(score) {
@@ -376,15 +360,13 @@
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.className = "filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition whitespace-nowrap";
             });
-            const activeBtn = document.getElementById(`filter-${score}`);
-            if (activeBtn) {
-                activeBtn.className = "filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition whitespace-nowrap";
-            }
+            document.getElementById(`filter-${score}`).className = "filter-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition whitespace-nowrap";
             renderAnimes();
         }
 
         function toggleAuthModal() {
             if (isAdmin) {
+                // Cerrar sesión
                 isAdmin = false;
                 localStorage.removeItem('is_admin');
                 applyAdminUI(false);
@@ -393,13 +375,9 @@
                 return;
             }
             const modal = document.getElementById('auth-modal');
-            if (modal.classList.contains('hidden')) {
-                modal.classList.remove('hidden');
-                document.getElementById('admin-password-input').value = '';
-                document.getElementById('admin-password-input').focus();
-            } else {
-                modal.classList.add('hidden');
-            }
+            modal.classList.remove('hidden');
+            document.getElementById('admin-password-input').value = '';
+            document.getElementById('admin-password-input').focus();
         }
 
         function verifyAdmin() {
@@ -407,7 +385,10 @@
             if (pwd === adminPassword) {
                 isAdmin = true;
                 localStorage.setItem('is_admin', 'true');
+                
+                // Ocultar modal explícitamente
                 document.getElementById('auth-modal').classList.add('hidden');
+                
                 applyAdminUI(true);
                 showToast('Acceso de administrador concedido');
                 renderAnimes();
@@ -431,7 +412,7 @@
                 document.getElementById('role-badge').textContent = "Modo Espectador";
                 resetForm();
             }
-            try { if(window.lucide) lucide.createIcons(); } catch(e){}
+            lucide.createIcons();
         }
 
         function openPasswordModal() {
@@ -472,10 +453,9 @@
         function showToast(msg, icon = 'check-circle', iconColor = 'text-emerald-400') {
             const toast = document.getElementById('toast');
             document.getElementById('toast-msg').textContent = msg;
-            const toastIcon = document.getElementById('toast-icon');
-            toastIcon.setAttribute('data-lucide', icon);
-            toastIcon.className = `w-5 h-5 ${iconColor}`;
-            try { if(window.lucide) lucide.createIcons(); } catch(e){}
+            document.getElementById('toast-icon').setAttribute('data-lucide', icon);
+            document.getElementById('toast-icon').className = `w-5 h-5 ${iconColor}`;
+            lucide.createIcons();
             
             toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => {
@@ -487,7 +467,7 @@
             return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        window.onload = init;
+        init();
     </script>
 </body>
 </html>
