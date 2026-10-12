@@ -153,26 +153,3 @@
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
             <h3 class="text-base font-semibold mb-3 flex items-center gap-2">
                 <i data-lucide="key-round" class="w-5 h-5 text-indigo-400"></i> Cambiar Contraseña Admin
-            </h3>
-            <div class="space-y-3 mb-4">
-                <input type="password" id="current-pwd" placeholder="Contraseña actual" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
-                <input type="password" id="new-pwd" placeholder="Nueva contraseña" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
-                <input type="password" id="confirm-pwd" placeholder="Confirmar nueva contraseña" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
-            </div>
-            <div class="flex justify-end gap-2">
-                <button onclick="closePasswordModal()" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white">Cancelar</button>
-                <button onclick="updatePassword()" class="px-4 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition">Guardar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Notificación Flotante -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 border border-slate-700 text-slate-100 px-4 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
-        <i id="toast-icon" data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
-        <span id="toast-msg" class="text-sm font-medium">Notificación</span>
-    </div>
-
-    <script>
-        // CONFIGURACIÓN DE SUPABASE
-        const SUPABASE_URL = 'https://hflhrzzafzoirobxgkhw.supabase.co';
-        const SUPABASE_ANON_
